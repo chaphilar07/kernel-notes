@@ -27,7 +27,7 @@ Fork is useful but we want to start processes with there own executable code ins
 
 Kernel stores * process descriptor * in circularly linked list called the `task list`, each of the entries in the circularly linked list is of type `task_struct` large data structure contains all informatiion about the task
 
- * __bold__ NOTE: There is no Explicit `task_list` struct in the kernel this DOES NOT EXIST!!!  - In the kernel in `linux/sched.h` there is no explicit `task_struct` instead each of the struct `task_struct` is EMBEDDED with a `list_head` field, that points to the previous and next `tas_struct` in the list, this data structure is completely implicit but we still refer to it as the `task_struct` Note that when we talk about a "process descriptor" we are refering to a `task_struct` this is what this is.
+ * ** NOTE: There is no Explicit `task_list` struct in the kernel this DOES NOT EXIST!!! ** - In the kernel in `linux/sched.h` there is no explicit `task_struct` instead each of the struct `task_struct` is EMBEDDED with a `list_head` field, that points to the previous and next `tas_struct` in the list, this data structure is completely implicit but we still refer to it as the `task_struct` Note that when we talk about a "process descriptor" we are refering to a `task_struct` this is what this is.
 
 In the `task_struct` the name of the `list_head` field is the `tasks` field.
 
