@@ -46,7 +46,22 @@ Note that when we have more than this we can have *overflow* this is bad, we can
 ### Process state
 
 * `state` field of a `task_struct` represents state of process, *NOTE this does not mean that this is exact state of process, we have to consider when `schedule()` gets called.* 
-
 * can change the `state` field using the `set_task_state(task,state)`, note that the `state` 
+  this is equivalent to `task->state = state;` included in `<linux/sched.h>`
 
-* 
+### Process context
+
+* code read from `executable file` and it is executed in process' address space execution occurs in `user space`.
+* program executes a `syscall` or fires `interrupt` code executes `kerne-space` *at this point the kernel is said to be executing on behalf of the process and is in `process context` *
+* when in the `process context` the `current` macro is valid recall that `current` gets you the current `thread_info`.
+
+
+### Process Family Tree 
+
+All process have PID, recall that we crate process by calling fork.
+
+* *init process: * the first process on the system responsible for finishing boot process running the initscripts, loading the remaining parts of the OS.
+
+*
+
+
