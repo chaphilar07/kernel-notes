@@ -27,11 +27,11 @@ Fork is useful but we want to start processes with there own executable code ins
 
 Kernel stores * process descriptor * in circularly linked list called the `task list`, each of the entries in the circularly linked list is of type `task_struct` large data structure contains all informatiion about the task
 
- * *NOTE: There is no Explicit `task_list` struct in the kernel this DOES NOT EXIST!!!* - In the kernel in `linux/sched.h` there is no explicit `task_struct` instead each of the struct `task_struct` is EMBEDDED with a `list_head` field, that points to the previous and next `tas_struct` in the list, this data structure is completely implicit but we still refer to it as the `task_struct` Note that when we talk about a "process descriptor" we are refering to a `task_struct` this is what this is.
+ * **NOTE: There is no Explicit `task_list` struct in the kernel this DOES NOT EXIST!!!** - In the kernel in `linux/sched.h` there is no explicit `task_struct` instead each of the struct `task_struct` is EMBEDDED with a `list_head` field, that points to the previous and next `tas_struct` in the list, this data structure is completely implicit but we still refer to it as the `task_struct` Note that when we talk about a "process descriptor" we are refering to a `task_struct` this is what this is.
 
 In the `task_struct` the name of the `list_head` field is the `tasks` field.
 
-*NOTE - kernel stack:*  The kernel itself is physically contiguous in one area of memory, but each process gets some virtual address space that is split into two parts the the userspace (lower part) and the kernel space (upper) the kernel space is really a collection of pointers to the physically contiguous kernel memory, this includes a pointer to the processes' own `Kernel Stack` the `Kernel Stack` is a stack datastrcuture that contains information that is specific to this process. This includes the `struct thread_info ` data structure that contains information about the process and a pointer to the `process descriptor - task_struct` of the process. NOTE that the `thread_info` no longer lives in the lower part of the `kernel stack` it lives directly inside of the process' `task_struct` this is how this works today.
+** NOTE - kernel stack:**  The kernel itself is physically contiguous in one area of memory, but each process gets some virtual address space that is split into two parts the the userspace (lower part) and the kernel space (upper) the kernel space is really a collection of pointers to the physically contiguous kernel memory, this includes a pointer to the processes' own `Kernel Stack` the `Kernel Stack` is a stack datastrcuture that contains information that is specific to this process. This includes the `struct thread_info ` data structure that contains information about the process and a pointer to the `process descriptor - task_struct` of the process. NOTE that the `thread_info` no longer lives in the lower part of the `kernel stack` it lives directly inside of the process' `task_struct` this is how this works today.
 
 
 *NOTE - IMPORTANT THE KERNEL DOES NOT RUN AS A PROCESS* it runs as a code block that has different contexts DON'T THINK OF IT AS A PROCESS!!
@@ -61,7 +61,8 @@ Note that when we have more than this we can have *overflow* this is bad, we can
 All process have PID, recall that we crate process by calling fork.
 
 * *init process: * the first process on the system responsible for finishing boot process running the initscripts, loading the remaining parts of the OS.
+* each process has exactly one parent process that parent PID is often denoted * PPID *
+* 
 
-*
 
 
