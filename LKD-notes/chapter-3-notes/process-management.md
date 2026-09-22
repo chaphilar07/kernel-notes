@@ -140,6 +140,78 @@ Threads created like other tasks we just set flags so that they shared common re
 
 
 
+```c 
+clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);
+```
+
+for example this syscall is basically creating two threads the parent and the child are now what we will call `threads` no longer processes.
+
+
+
+### Kernel Threads
+
+Often useful for the kernel to be able to do things on it's own in the background, this is done through `kernel threads`, these kernel threads operate the same way that a regular thread will except that the kernel thread will **NOT** have any address space, they operate only in kernel space, eg they only execute kernel code never userspace code.
+
+kernel threads are schedulable and they are preemptable
+
+you can view the kernel threads on the system by using the common
+
+
+```sh 
+ps -ef
+```
+``` 
+```
+
+There are many kernel threads in the system 
+
+Created on the system boot and they are created like anyother process with the `clone()` system call and all kernel threads are `forked` from the `kthread` kernel process. 
+
+```c 
+struct task_struct *kthread_create(int (*threadfn)(void *data),
+void *data,
+const char namefmt[],
+...)
+```
+
+The interface for creating new kernel threads, you can find this in `<linux/kthread.h>`. 
+
+
+
+### Process Termination 
+
+* All processes eventually must come to an end this is usually self-inflicted with the process calling the exit() call, the C compiler will add this to the end of the main() function.
+* A process can also end involuntarily, for example when it receives a signal (SIGKILL) or it receives an exception that it cannot handle or ignore.
+* Majority of the work is done by the `do_exit()` functio defined in `kernel/exit.c`
+
+* the `do_exit()` function does the following
+
+1. sets the `PF_EXIT` flag in the task_struct `flags`
+2. deletes any kernel timers that the task_struct is holding onto by calling the `del_timer_sync` function, upon return guaranteed no longer holding kernel timers 
+3. If BSD accounting is turned on the `do_exit()` calls the `acct_update_integrals` function to clear the accounting information.
+4. calls `exit_mm()`, releases the `mm_struct` that is held by the task_struct if no other process (task_struct) holds a reference to the mm_struct the kernel deletes it.
+5. calls `exit_sem` to let go of any semaphore that is held for IPC.
+6. `exit_files()` and `exit_fs()` to decrement the usage count of file descriptors and fs data (*NOTE* we are refering to the useage counts of the filesystem and the file descriptors eg the number of processes that have them open when this reaches zero the kernel reclaims these.)
+7. sets the tasks `exit code` stored in the `exit_code` of the `task_struct` to the code that passed to the `exit()` function.
+8. calls `exit_notify` this sends signal to the parent  fs data (*NOTE* we are refering to the useage counts of the filesystem and the file descriptors eg the number of processes that have them open when this reaches zero the kernel reclaims these.)
+7. sets the tasks `exit code` stored in the `exit_code` of the `task_struct` to the code that passed to the `exit()` function.
+8. calls `exit_notify` this sends signal to the parent and reparents any children of the process that is exiting to another thread in the same thread group (eg. common tgid) and then it sets the `exit_state` of the `task_struct` to `EXIT_ZOMBIE`.
+9. calls the `schedule()` function ot make sure that it will not run on any of the processors this is how this works.
+
+### Removing Process Descriptor
+
+The process descriptor after the process has been terminated still exists, but it is in a `zombie` state where it cannot be scheduled this is how this is working.
+
+The act of termination and freeing of the `task_struct` are two different operations, allows a parent process to obtain information about the child that has been terminated can be useful for some bookeeping purposes.
+
+The `wait()` family of syscalls are the syscalls a parent will use on its  *dead children* to get exit status information, this will suspend the calling process and have it wait until one of it's children exits at which point the function will return the PID of the child that exited.
+
+So the parent will call the function `release_task()` when it is time to finally release the memory of the task_struct this is done by the following chain.
+
+1. calls `__exit_signal()` ->`__unhash_process()` -> `detach_pid()` this removes the process from the PIDhash and removes the rpocess from the task list.
+2. __exit_signal() releases any remaining resources used by now dead process.
+3. if task was last member of the thread group leader is now a zombie release_task() notifies the zombie leader's parent. eg. if the task_struct that spanwed us is also a zombie we go to that processes parent.
+4. `release_task` calls `put_task_struct()` to free the memory pages that contained the kernel stack and the `thread_info` that the process used also deallocates the slab cache.
 
 
 
